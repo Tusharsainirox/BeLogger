@@ -1,14 +1,27 @@
-import React from 'react'
-import {AnimatePresence , motion} from 'framer-motion'
+import React from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
-const AnimationWrapper = ({children, keyVaIue, initial={opacity:0}, animate= {opacity: 1},transition= {duration:1} ,className}) => {
+const AnimationWrapper = ({
+  children,
+  keyVaIue,
+  initial = { opacity: 0 },
+  animate = { opacity: 1 },
+  transition = { duration: 1 },
+  className,
+}) => {
   return (
-   <AnimatePresence>
-    <motion.div key={keyVaIue} initial={initial} animate={animate} transition={transition} className={className}>
+    <AnimatePresence>
+      <motion.div
+        key={keyVaIue}
+        initial={initial}
+        animate={animate}
+        transition={transition}
+        className={className}
+      >
         {children}
-    </motion.div>
-   </AnimatePresence>
-  )
-}
+      </motion.div>
+    </AnimatePresence>
+  );
+};
 
-export default AnimationWrapper
+export default AnimationWrapper;
