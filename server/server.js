@@ -7,6 +7,9 @@ import jwt from "jsonwebtoken";
 import cors from "cors";
 import serviceAccountKey from "./firebaseConnect.json" assert {type:"json"} ;
 import { getAuth } from "firebase-admin/auth";
+import aws from "aws-sdk"
+
+
 const server = express();
 const port = 3000;
 
@@ -25,6 +28,19 @@ let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/; // regex for pass
 
 server.use(express.json());
 server.use(cors());
+
+mongoose.connect(process.env.DB_LOCATION, {
+  autoIndex: true,
+});
+
+
+//setting up aws s3 bucket
+const s3 = new aws.S3({
+  region : 'ap-south-1',
+  accessKeyId: process.env.AWS_ACCESS_KEY ,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+
+})
 
 const getFormatDataToSend = (user) => {
   const access_token = jwt.sign(
@@ -189,9 +205,6 @@ server.post("/google-auth", async (req, res) => {
     })
 });
 
-mongoose.connect(process.env.DB_LOCATION, {
-  autoIndex: true,
-});
 server.listen(port, () => {
   console.log(`app listening on port ${port}`);
 });
