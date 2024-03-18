@@ -34,7 +34,8 @@ mongoose.connect(process.env.DB_LOCATION, {
 });
 
 
-//setting up aws s3 bucket
+//setting up aws s3 bucket 
+//just a useless line to check if github is working or not
 const s3 = new aws.S3({
   region : 'ap-south-1',
   accessKeyId: process.env.AWS_ACCESS_KEY ,
