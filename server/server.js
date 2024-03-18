@@ -5,10 +5,9 @@ import "dotenv/config";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
 import cors from "cors";
-import serviceAccountKey from "./firebaseConnect.json" assert {type:"json"} ;
+import serviceAccountKey from "./firebaseConnect.json" assert { type: "json" };
 import { getAuth } from "firebase-admin/auth";
-import aws from "aws-sdk"
-
+import aws from "aws-sdk";
 
 const server = express();
 const port = 3000;
@@ -33,15 +32,24 @@ mongoose.connect(process.env.DB_LOCATION, {
   autoIndex: true,
 });
 
-
-//setting up aws s3 bucket 
-//just a useless line to check if github is working or not
+//setting up aws s3 bucket
 const s3 = new aws.S3({
-  region : 'ap-south-1',
-  accessKeyId: process.env.AWS_ACCESS_KEY ,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  region: "ap-south-1",
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
 
-})
+const generateUploadURL = async () => {
+  const date = new Date();
+  const imageName = `${nanoid()}-${date.getTime()}.jpeg`;
+
+  return await s3.getSignedUrlPromise("putObject", {
+    Bucket: "belogger-mern",
+    Key: imageName,
+    Expires: 1000,
+    ContentType: "image/jpeg",
+  });
+};
 
 const getFormatDataToSend = (user) => {
   const access_token = jwt.sign(
@@ -66,6 +74,15 @@ const generateUsername = async (email) => {
   isUsernameNotUnique ? (username += nanoid().substring(0, 5)) : "";
   return username;
 };
+
+server.get("/get-upload-url", (req, res) => {
+  generateUploadURL()
+    .then((url) => res.status(200).json({ uploadedURL: url }))
+    .catch((err) => {
+      console.log(err.message);
+      return res.status(500).json({ error: err.message });
+    });
+});
 
 server.post("/signup", (req, res) => {
   let { fullname, email, password } = req.body;
@@ -103,7 +120,7 @@ server.post("/signup", (req, res) => {
     user
       .save()
       .then((u) => {
-       return res.status(200).json(getFormatDataToSend(u));
+        return res.status(200).json(getFormatDataToSend(u));
       })
       .catch((err) => {
         if (err.code === 11000) {
@@ -123,7 +140,7 @@ server.post("/signin", (req, res) => {
       if (!user) {
         return res.status(403).json({ error: "Email not found" });
       }
-      if(!user.google_auth){
+      if (!user.google_auth) {
         bcypt.compare(password, user.personal_info.password, (err, result) => {
           if (err) {
             return res
@@ -137,10 +154,12 @@ server.post("/signin", (req, res) => {
             return res.status(200).json(getFormatDataToSend(user));
           }
         });
-      }else{
-        return res.status(403).json({"error" : "Account was created using google, Try signing in with Google"})
+      } else {
+        return res.status(403).json({
+          error: "Account was created using google, Try signing in with Google",
+        });
       }
-      
+
       // return res.status(200).json({ message: "Got user document" });
     })
     .catch((error) => {
@@ -172,12 +191,10 @@ server.post("/google-auth", async (req, res) => {
       if (user) {
         //login
         if (!user.google_auth) {
-          return res
-            .status(403)
-            .json({
-              "error":
-                "This email was already signed without google, please use the password to access the account",
-            });
+          return res.status(403).json({
+            error:
+              "This email was already signed without google, please use the password to access the account",
+          });
         }
       } else {
         let username = await generateUsername(email);
@@ -187,23 +204,28 @@ server.post("/google-auth", async (req, res) => {
             fullname: name,
             username: username,
           },
-          google_auth: true
+          google_auth: true,
         });
 
-        await user.save().then((u)=>{
-          user = u
-        }).catch(err=>{
-          return res.status(500).json({"error":err.message})
-        })
+        await user
+          .save()
+          .then((u) => {
+            user = u;
+          })
+          .catch((err) => {
+            return res.status(500).json({ error: err.message });
+          });
       }
 
-      return res.status(200).json(getFormatDataToSend(user))
-
-    }).catch(err=>{
-      if(!res.headersSent){
-        return res.status(500).json({"error":"You failed to login with google.Try with another account"})
-      }
+      return res.status(200).json(getFormatDataToSend(user));
     })
+    .catch((err) => {
+      if (!res.headersSent) {
+        return res.status(500).json({
+          error: "You failed to login with google.Try with another account",
+        });
+      }
+    });
 });
 
 server.listen(port, () => {

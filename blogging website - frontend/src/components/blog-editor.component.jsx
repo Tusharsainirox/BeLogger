@@ -1,15 +1,30 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Link } from "react-router-dom";
 import logo from "../imgs/logo.png";
 import AnimationWrapper from "../common/page-animation";
-import blogBanner from "../imgs/blog banner.png"
-
+import blogBanner from "../imgs/blog banner.png";
+import { uploadIamge } from "../common/aws";
+import { Toaster, toast } from "react-hot-toast";
 const BlogEditor = () => {
+  let blogBannerRef = useRef();
 
-    const handelBannerUpload = (e)=>{
-        let img = e.target.files[0];
-        console.log(img)
+  const handelBannerUpload = (e) => {
+    let img = e.target.files[0];
+
+    if (img) {
+      let loadingToast = toast.loading("Uploading...");
+      uploadIamge(img).then((url) => {
+        if (url) {
+          toast.dismiss(loadingToast);
+          toast.success("Uploaded 👍")
+          blogBannerRef.current.src = url;
+        }
+      }).catch(err=>{
+        toast.dismiss(loadingToast);
+        return toast.error(err)
+      })
     }
+  };
 
   return (
     <>
@@ -25,24 +40,25 @@ const BlogEditor = () => {
           <button className="btn-light py-2">Save Draft</button>
         </div>
       </nav>
-    
-    <AnimationWrapper>
-        <section >
-        <div className="mx-auto max-w-[900] w-full">
-
-        <div className="relative aspect-video bg-white border-4 hover:opacity-80 border-grey" >
-            <label htmlFor="uploadBanner" >
-                <img src={blogBanner} className="z-20"/>
-                <input id="uploadBanner" type="file" accept=".jpg, .jpeg, .png" hidden onChange={handelBannerUpload}/>
-            </label>
-        </div>
-
-        </div>
-
+      <Toaster />
+      <AnimationWrapper>
+        <section>
+          <div className="mx-auto max-w-[900] w-full">
+            <div className="relative aspect-video bg-white border-4 hover:opacity-80 border-grey">
+              <label htmlFor="uploadBanner">
+                <img ref={blogBannerRef} src={blogBanner} className="z-20" />
+                <input
+                  id="uploadBanner"
+                  type="file"
+                  accept=".jpg, .jpeg, .png"
+                  hidden
+                  onChange={handelBannerUpload}
+                />
+              </label>
+            </div>
+          </div>
         </section>
-    </AnimationWrapper>
-
-
+      </AnimationWrapper>
     </>
   );
 };
