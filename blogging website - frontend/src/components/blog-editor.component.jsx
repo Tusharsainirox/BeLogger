@@ -26,6 +26,19 @@ const BlogEditor = () => {
     }
   };
 
+  const handelTitleKeyDown =(e)=>{
+    if(e.keyCode == 13){//enter key action disabled
+      e.preventDefault();
+    }
+  }
+
+  const handelTitleChange = (e)=>{
+    let input = e.target ; 
+// for resetting height so that we dont get the scroll bar on the textField with larger inputs
+    input.style.height = "auto";
+    input.style.height = input.scrollHeight + "px"
+  }
+
   return (
     <>
       <nav className="navbar">
@@ -56,6 +69,14 @@ const BlogEditor = () => {
                 />
               </label>
             </div>
+
+            <textarea placeholder="Blog title" className="text-4xl font-medium w-full h-20 outline-none resize-none mt-10 leading-tight placeholder:opacity-40 " onKeyDown={handelTitleKeyDown}
+            onChange={ handelTitleChange}>
+
+
+            </textarea>
+
+
           </div>
         </section>
       </AnimationWrapper>
