@@ -6,24 +6,31 @@ import blogBanner from "../imgs/blog banner.png";
 import { uploadIamge } from "../common/aws";
 import { Toaster, toast } from "react-hot-toast";
 import { EditorContext } from "../pages/editor.pages";
-import EditorJS from "@editorjs/editorjs"
+import EditorJS from "@editorjs/editorjs";
 import { tools } from "./tools.component";
 
-
 const BlogEditor = () => {
-
   useEffect(() => {
-   let editor = new EditorJS({
-      holderId : "textEditor",
-      tools: tools ,
-      data : "",
-      placeholder:"Let's write an awesome story!"
-   })
-  }, [])
-  
+    setTextEditorState(
+      new EditorJS({
+        holderId: "textEditor",
+        tools: tools,
+        data: "",
+        placeholder: "Let's write an awesome story!",
+      }))
+  }, []);
 
   //using context
-  let { blog: { title, banner, content, tags, des }, setBlog, blog} = useContext(EditorContext);
+  let {
+    blog: { title, banner, content, tags, des },
+    setBlog,
+    blog,
+    setTextEditorState,
+    textEditorState,
+    editorState,
+    setEditorState
+  } = useContext(EditorContext);
+
 
   const handelBannerUpload = (e) => {
     let img = e.target.files[0];
@@ -35,7 +42,7 @@ const BlogEditor = () => {
           if (url) {
             toast.dismiss(loadingToast);
             toast.success("Uploaded 👍");
-            setBlog({...blog , banner:url})
+            setBlog({ ...blog, banner: url });
           }
         })
         .catch((err) => {
@@ -45,11 +52,11 @@ const BlogEditor = () => {
     }
   };
 
-const handleBannerError = (e)=>{
-  let img = e.target;
+  const handleBannerError = (e) => {
+    let img = e.target;
 
-  img.src = blogBanner
-}
+    img.src = blogBanner;
+  };
 
   const handelTitleKeyDown = (e) => {
     if (e.keyCode == 13) {
@@ -65,8 +72,29 @@ const handleBannerError = (e)=>{
     input.style.height = input.scrollHeight + "px";
 
     // handeling the changing heading use context
-    setBlog({...blog, title:input.value})
+    setBlog({ ...blog, title: input.value });
   };
+
+  const handlePublishEvent = (e)=>{
+    if(!banner.length){
+      return toast.error("Upload blog banner to Publish")
+    }
+    if(!title.length){
+      return toast.error("Write blog title to Publish")
+    }
+    if(textEditorState.isReady ){
+      textEditorState.save().then(data=>{
+        if(data.blocks.length){
+          setBlog({...blog, content:data})
+          setEditorState("publish")
+        }else{
+          return toast.error("Write something in your blog to Publish it")
+        }
+      }).catch((err)=>{
+        console.log(err);
+      })
+    }
+  }
 
   return (
     <>
@@ -75,12 +103,10 @@ const handleBannerError = (e)=>{
           <img src={logo} />
         </Link>
         <p className=" max-md:hidden text-black line-clamp-1 w-full ">
-         {
-          title.length? title : "New Blog!"
-         } 
+          {title.length ? title : "New Blog!"}
         </p>
         <div className=" flex gap-4 ml-auto">
-          <button className="btn-dark py-2">Publish</button>
+          <button onClick={handlePublishEvent} className="btn-dark py-2">Publish</button>
           <button className="btn-light py-2">Save Draft</button>
         </div>
       </nav>
@@ -90,7 +116,11 @@ const handleBannerError = (e)=>{
           <div className="mx-auto max-w-[900] w-full">
             <div className="relative aspect-video bg-white border-4 hover:opacity-80 border-grey">
               <label htmlFor="uploadBanner">
-                <img src={banner} className="z-20" onError={handleBannerError}/>
+                <img
+                  src={banner}
+                  className="z-20"
+                  onError={handleBannerError}
+                />
                 <input
                   id="uploadBanner"
                   type="file"
@@ -107,12 +137,9 @@ const handleBannerError = (e)=>{
               onKeyDown={handelTitleKeyDown}
               onChange={handelTitleChange}
             ></textarea>
-            <hr className="w-full opacity-10 my-5"/>
+            <hr className="w-full opacity-10 my-5" />
 
-            <div id="textEditor" className=" font-gelasio">
-
-            </div>
-
+            <div id="textEditor" className=" font-gelasio"></div>
           </div>
         </section>
       </AnimationWrapper>
