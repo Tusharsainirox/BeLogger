@@ -55,7 +55,7 @@ const PublishForm = () => {
 
   return (
     <AnimationWrapper>
-      <section className="w-screen min-h-screen grid items-center lg: grid-cols-2 py-16 lg:gap-4 ">
+      <section className="w-screen min-h-screen grid items-center lg:grid-cols-2 py-16 lg:gap-4 ">
         <Toaster />
         <button
           onClick={handelCloseEvent}
@@ -63,6 +63,7 @@ const PublishForm = () => {
         >
           <i className="fi fi-br-cross"></i>
         </button>
+        
         <div className="max-w-[550px] center ">
           <p className="text-dark-grey mb-1">Preview</p>
           <div className="w-full aspect-video rounded-lg overflow-hidden bg-grey mt-4 ">
@@ -116,6 +117,10 @@ const PublishForm = () => {
               })
             }
           </div>
+
+          <p className="mt-1 mb-4 text-dark-grey text-right">{tagLimit - tags.length} Tags left</p>
+
+          <button className=" btn-dark px-8">Publish</button>
 
         </div>
       </section>
