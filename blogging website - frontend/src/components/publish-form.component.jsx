@@ -3,14 +3,23 @@ import AnimationWrapper from "../common/page-animation";
 import { Toaster, toast } from "react-hot-toast";
 import { EditorContext } from "../pages/editor.pages";
 import Tag from "./tags.component";
+import axios from "axios";
+import { userContext } from "../App";
+import { useNavigate } from "react-router-dom";
 
 const PublishForm = () => {
   const charachterLimit = 200;
-  const tagLimit =10;
+  const tagLimit = 10;
+
+  let navigate = useNavigate();
+
+  let {
+    userAuth: { access_token },
+  } = useContext(userContext);
 
   let {
     blog,
-    blog: { banner, title, des, tags },
+    blog: { banner, title, des, tags, content },
     setEditorState,
     setBlog,
   } = useContext(EditorContext);
@@ -35,23 +44,81 @@ const PublishForm = () => {
     }
   };
 
-  const handelkeyDown = (e)=>{
-    if(e.keyCode ==13|| e.keyCode == 188){
+  const handelkeyDown = (e) => {
+    if (e.keyCode == 13 || e.keyCode == 188) {
       e.preventDefault();
 
-      let tag = e.target.value
+      let tag = e.target.value;
 
-      if(tags.length < tagLimit){
-          if(!tags.includes(tag) && tag.length ){
-            setBlog({...blog, tags:[...tags, tag]})
-          }
-      }else{
-        toast.error(`You can add max ${tagLimit} Tags`)
+      if (tags.length < tagLimit) {
+        if (!tags.includes(tag) && tag.length) {
+          setBlog({ ...blog, tags: [...tags, tag] });
+        }
+      } else {
+        toast.error(`You can add max ${tagLimit} Tags`);
       }
 
       e.target.value = "";
     }
-  }
+  };
+
+  const publishBlog = (e) => {
+    if (e.target.className.includes("disable")) {
+      return;
+    }
+
+    if (!title.length) {
+      return toast.error("Write blog title before publishing");
+    }
+    if (!des.length || des.length > charachterLimit) {
+      return toast.error(
+        `Write a description about your blog within ${charachterLimit} characters to publish`
+      );
+    }
+    if (!tags.length) {
+      return toast.error(
+        `Enter atleast atleast 1 tag to help us rank your blog`
+      );
+    }
+    if (!tags.length) {
+      return toast.error(
+        `Enter atleast atleast 1 tag to help us rank your blog`
+      );
+    }
+
+    let loadingToast = toast.loading("Publishing...");
+    e.target.classList.add("disable");
+
+    let blogObj = {
+      title,
+      des,
+      banner,
+      content,
+      tags,
+      draft: false,
+    };
+
+    axios
+      .post(import.meta.env.VITE_SERVER_DOMAIN + "/create-blog", blogObj, {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      })
+      .then(() => {
+        e.target.classList.remove("disable");
+        toast.dismiss(loadingToast)
+        toast.success("published 👍")
+
+        setTimeout(() => {
+          navigate("/")
+        }, 500);
+      }).catch(({response})=>{
+        e.target.classList.remove("disable");
+        toast.dismiss(loadingToast)
+
+        return toast.error(response.data.error)
+      })
+  };
 
   return (
     <AnimationWrapper>
@@ -63,7 +130,7 @@ const PublishForm = () => {
         >
           <i className="fi fi-br-cross"></i>
         </button>
-        
+
         <div className="max-w-[550px] center ">
           <p className="text-dark-grey mb-1">Preview</p>
           <div className="w-full aspect-video rounded-lg overflow-hidden bg-grey mt-4 ">
@@ -105,23 +172,29 @@ const PublishForm = () => {
             {" "}
             {charachterLimit - des.length} characters left{" "}
           </p>
-          <p className="text-dark-grey mb-2 mt-9" >Topics- ( Helps in searching and ranking your blog post! )</p>
+          <p className="text-dark-grey mb-2 mt-9">
+            Topics- ( Helps in searching and ranking your blog post! )
+          </p>
 
           <div className="relative input-box pl-2 py-2 pb-4 ">
-            <input type="text" placeholder="Topic" className="sticky input-box bg-white top-0 left-0 pl-4 mb-3 focus:bg-white" 
+            <input
+              type="text"
+              placeholder="Topic"
+              className="sticky input-box bg-white top-0 left-0 pl-4 mb-3 focus:bg-white"
               onKeyDown={handelkeyDown}
             />
-            {
-              tags.map((tag,i)=>{
-               return <Tag key={i} tagIndex={i} tag={tag} />
-              })
-            }
+            {tags.map((tag, i) => {
+              return <Tag key={i} tagIndex={i} tag={tag} />;
+            })}
           </div>
 
-          <p className="mt-1 mb-4 text-dark-grey text-right">{tagLimit - tags.length} Tags left</p>
+          <p className="mt-1 mb-4 text-dark-grey text-right">
+            {tagLimit - tags.length} Tags left
+          </p>
 
-          <button className=" btn-dark px-8">Publish</button>
-
+          <button onClick={publishBlog} className=" btn-dark px-8">
+            Publish
+          </button>
         </div>
       </section>
     </AnimationWrapper>
