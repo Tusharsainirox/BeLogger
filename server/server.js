@@ -257,19 +257,21 @@ server.post("/create-blog", verifyJWT , async(req,res)=>{
   let{title, des, banner, tags, content, draft} = req.body
 
   if(!title.length){
-    return res.status(403).json({error: "You must provide a title to publish a form"})
+    return res.status(403).json({error: "You must provide a title"})
   }
-  if(!des.length || des.length>200){
-    return res.status(403).json({error: "You must provide a blog description under 200 characters "})
-  }
-  if(!banner.length){
-    return res.status(403).json({error:"You must provide a blog banner to publish it"})
-  }
-  if(!content.blocks.length){
-    return res.status(403).json({error:"There must be some blog content to publish"})
-  }
-  if(!tags.length || tags.length>10){
-    return res.status(403).json({error:"Provide tags in order to publish it, Maximum of 10"})
+  if(!draft){
+    if(!des.length || des.length>200){
+      return res.status(403).json({error: "You must provide a blog description under 200 characters "})
+    }
+    if(!banner.length){
+      return res.status(403).json({error:"You must provide a blog banner to publish it"})
+    }
+    if(!content.blocks.length){
+      return res.status(403).json({error:"There must be some blog content to publish"})
+    }
+    if(!tags.length || tags.length>10){
+      return res.status(403).json({error:"Provide tags in order to publish it, Maximum of 10"})
+    }
   }
 
   tags = tags.map(tag=>tag.toLowerCase())
