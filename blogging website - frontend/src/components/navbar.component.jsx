@@ -5,7 +5,7 @@ import { userContext } from "../App";
 import UserNavigationPanel from "./user-navigation.component";
 
 const Navbar = () => {
-  const [SearchVisibility, SetSearchVisibility] = useState(true);
+  const [SearchVisibility, SetSearchVisibility] = useState(false);
 
   const [userNavPanel, setUserNavPanel] = useState(false);
 
